@@ -1,0 +1,16 @@
+{
+  "name": "nspanel-hmi",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Habillage maison des NSPanel EU (fork du HMI NSPanel Easy) — fonds et tuiles rendus depuis les thèmes du mur",
+  "scripts": {
+    "render": "node scripts/render-theme.ts",
+    "preview": "node scripts/render-preview.ts"
+  },
+  "devDependencies": {
+    "@mdi/js": "^7.4.47",
+    "@resvg/resvg-js": "^2.6.2",
+    "pngjs": "^7.0.0"
+  }
+}

@@ -1,0 +1,3 @@
+node_modules/
+# Tout ce que produit la chaine (pics, overrides, palette, slots, HMI, TFT) se regenere.
+themes/
