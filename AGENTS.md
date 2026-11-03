@@ -1,133 +1,133 @@
 # AGENTS.md — nspanel-hmi
 
-## But
+## Purpose
 
-Habillage du HMI Nextion de NSPanel Easy (Sonoff NSPanel EU, paysage) : on garde pages, objets et macros amont et on
-remplace uniquement les images (fonds jour/nuit, splash, tuiles) par des thèmes saisonniers (`octobre`, `novembre`).
+Reskin of the NSPanel Easy Nextion HMI (Sonoff NSPanel EU, landscape): the upstream pages, objects and macros are
+kept and only the images (day/night backgrounds, splash, tiles) are replaced by seasonal themes (`octobre`, `novembre`).
 
-## Carte des fichiers
+## File map
 
-| Fichier | Rôle |
+| File | Role |
 | --- | --- |
-| `package.json` | Scripts `render` / `preview`, dépendances : `@resvg/resvg-js` (SVG → pixels), `pngjs`, `@mdi/js` (icônes des maquettes). `"type": "module"`. |
-| `scripts/lib.ts` | Constantes `W=480`, `H=320`, `VISIBLE_W=450` ; `place()` (pose un motif d'octobre par son pied), `compose()`, `rng()` (graine fixe), `rgb565()`, `renderPng()` (rendu + quantification RGB565, Floyd-Steinberg optionnel). |
-| `scripts/render-theme.ts` | Rend un thème dans `themes/<thème>/` : `pics/` (sources sous les noms amont), `overrides/79.png`, `palette.json`. |
-| `scripts/render-preview.ts` | Maquettes 450×320 par pièce et par moment, à partir de `themes/<thème>/dist/slots/*.png` et de la géométrie du HMI amont relevée à la main (positions codées en dur). Sortie `themes/<thème>/dist/preview/`. |
-| `scripts/themes/octobre.ts` | Thème octobre : `TEXT`, `textRgb565`, `backgroundDark/Light/Splash()`, `tileActive()`, `tileInactiveDark/Light()`. |
-| `scripts/themes/novembre.ts` | Thème novembre, même interface. `TEXT` volontairement IDENTIQUE à octobre. |
-| `scripts/art/octobre-art.ts` | Bibliothèque de motifs tonnés (`MOTIFS`, palettes `JOUR` / `NUIT`, `svg(nom, palette)`). Repris de l'application des écrans muraux. |
-| `scripts/art/novembre-art.ts` | Dessins de la Saint-Martin en SVG brut, une fonction par motif ; n'importe rien d'octobre. Même origine. |
-| `build.sh` | Dans WSL. `images` : clone NSPanel Easy au tag, `generate_images.sh landscape`, overrides, trous comblés par `placeholder.png` → `dist/slots/`. `tft` : Nextion Editor 1.68.2 sous Wine dans `sztupy/nextion-scripts` → `dist/nspanel_landscape.tft` + `.hmi`. |
-| `nextion/UpdateImagesFixed.ahk` | Supprime puis réimporte les images `C:\pics\0..N`, sauvegarde, exporte le TFT. Dérivé de `UpdateImages.ahk` (sztupy/nextion-editor-docker) + `WinActivate` avant chaque séquence clavier. |
-| `nextion/CompileFixed.ahk` | Sauvegarde le HMI ouvert et l'exporte en TFT, même correctif. |
-| `nextion/compile-in-container.sh` | Exécuté dans le conteneur : compile `input.hmi` tel quel (sans réimport d'images). `DEBUG=1` : captures d'écran. |
-| `scripts/esphome_ingress.py` | Client du Device Builder ESPHome via l'ingress HA : `get <chemin>`, `run <yaml>` (ancien `/run`), `install <yaml>` (websocket `/ws`, `firmware/install` + `firmware/follow_job`, OTA), `ws <commande> '<json>'`. |
-| `scripts/builder_jobs.py` | Liste les 4 derniers jobs du Device Builder ; `[job_id]` affiche les 40 dernières lignes de sortie. |
-| `scripts/hmi_patch.py` | Réécrit en place des attributs entiers (x, y, w, h, font, pco…) d'objets d'un `.hmi`, sur leur largeur d'origine. Nécessite un dossier Nextion2Text (non fourni). |
-| `scripts/hmi_crc_search.py` | Outil de recherche : essaie des variantes de CRC32 pour retrouver le CRC de page d'un `.hmi`. Nécessite Nextion2Text. |
-| `docs/preview/*.png` | Maquettes publiées du thème octobre (sorties de `render-preview.ts`). |
-| `themes/` | Généré, absent du dépôt ; `themes/*/dist/` est ignoré par git. |
+| `package.json` | `render` / `preview` scripts, dependencies: `@resvg/resvg-js` (SVG → pixels), `pngjs`, `@mdi/js` (mockup icons). `"type": "module"`. |
+| `scripts/lib.ts` | Constants `W=480`, `H=320`, `VISIBLE_W=450`; `place()` (places an October motif by its base), `compose()`, `rng()` (fixed seed), `rgb565()`, `renderPng()` (render + RGB565 quantization, optional Floyd-Steinberg). |
+| `scripts/render-theme.ts` | Renders a theme into `themes/<theme>/`: `pics/` (sources under the upstream names), `overrides/79.png`, `palette.json`. |
+| `scripts/render-preview.ts` | 450×320 mockups per room and per time of day, from `themes/<theme>/dist/slots/*.png` and the upstream HMI geometry measured by hand (hard-coded positions). Output `themes/<theme>/dist/preview/`. |
+| `scripts/themes/octobre.ts` | October theme: `TEXT`, `textRgb565`, `backgroundDark/Light/Splash()`, `tileActive()`, `tileInactiveDark/Light()`. |
+| `scripts/themes/novembre.ts` | November theme, same interface. `TEXT` deliberately IDENTICAL to October. |
+| `scripts/art/octobre-art.ts` | Library of toned motifs (`MOTIFS`, `JOUR` / `NUIT` palettes, `svg(nom, palette)`). Taken from the wall screens app. |
+| `scripts/art/novembre-art.ts` | St. Martin's Day drawings in raw SVG, one function per motif; imports nothing from October. Same origin. |
+| `build.sh` | In WSL. `images`: clones NSPanel Easy at the tag, `generate_images.sh landscape`, overrides, gaps filled with `placeholder.png` → `dist/slots/`. `tft`: Nextion Editor 1.68.2 under Wine in `sztupy/nextion-scripts` → `dist/nspanel_landscape.tft` + `.hmi`. |
+| `nextion/UpdateImagesFixed.ahk` | Deletes then re-imports the images `C:\pics\0..N`, saves, exports the TFT. Derived from `UpdateImages.ahk` (sztupy/nextion-editor-docker) + `WinActivate` before each key sequence. |
+| `nextion/CompileFixed.ahk` | Saves the open HMI and exports it as TFT, same fix. |
+| `nextion/compile-in-container.sh` | Runs in the container: compiles `input.hmi` as is (no image re-import). `DEBUG=1`: screenshots. |
+| `scripts/esphome_ingress.py` | Client for the ESPHome Device Builder through the HA ingress: `get <path>`, `run <yaml>` (old `/run`), `install <yaml>` (websocket `/ws`, `firmware/install` + `firmware/follow_job`, OTA), `ws <command> '<json>'`. |
+| `scripts/builder_jobs.py` | Lists the last 4 Device Builder jobs; `[job_id]` shows the last 40 lines of output. |
+| `scripts/hmi_patch.py` | Rewrites whole attributes (x, y, w, h, font, pco…) of objects in a `.hmi` in place, on their original width. Requires a Nextion2Text folder (not provided). |
+| `scripts/hmi_crc_search.py` | Research tool: tries CRC32 variants to find the page CRC of a `.hmi`. Requires Nextion2Text. |
+| `docs/preview/*.png` | Published mockups of the October theme (outputs of `render-preview.ts`). |
+| `themes/` | Generated, not in the repository; `themes/*/dist/` is ignored by git. |
 
-## Flux de données
+## Data flow
 
 ```
 scripts/art/*.ts → scripts/themes/<t>.ts (SVG 480×320) → lib.renderPng (RGB565)
   → themes/<t>/pics/{background,buttons_pages}/*.png + overrides/79.png + palette.json
-  → build.sh images : copie sur hmi/dev/pics amont → generate_images.sh landscape → slots 0..N
-  → themes/<t>/dist/slots/ → render-preview.ts (maquettes)
-  → build.sh tft : slots → C:\pics dans le conteneur → UpdateImagesFixed.ahk → .tft
+  → build.sh images: copy onto upstream hmi/dev/pics → generate_images.sh landscape → slots 0..N
+  → themes/<t>/dist/slots/ → render-preview.ts (mockups)
+  → build.sh tft: slots → C:\pics in the container → UpdateImagesFixed.ahk → .tft
 ```
 
-Fichiers sources écrits par `render-theme.ts` (noms imposés par l'amont, y compris la faute `innactive`) :
+Source files written by `render-theme.ts` (names imposed by upstream, including the `innactive` typo):
 `background/background_dark_landscape.png`, `background/background_light_landscape.png`,
 `background/background_splash_landscape.png`, `buttons_pages/buttons_pages_background_active_landscape.png`,
 `buttons_pages/buttons_pages_background_innactive_landscape.png`.
 
-## Commandes
+## Commands
 
 ```sh
-npm install                                  # Node ≥ 22.18 (exécution directe des .ts, syntaxe effaçable seulement)
-node scripts/render-theme.ts octobre         # ou novembre ; défaut octobre
-bash build.sh octobre images                 # WSL : Docker, ImageMagick, python3-yaml, git
-node scripts/render-preview.ts octobre       # exige dist/slots (étape précédente)
-bash build.sh octobre tft                    # exige l'étape images (lit ~/nspanel/work-<t>/last_slot)
+npm install                                  # Node ≥ 22.18 (runs .ts directly, erasable syntax only)
+node scripts/render-theme.ts octobre         # or novembre; default octobre
+bash build.sh octobre images                 # WSL: Docker, ImageMagick, python3-yaml, git
+node scripts/render-preview.ts octobre       # needs dist/slots (previous step)
+bash build.sh octobre tft                    # needs the images step (reads ~/nspanel/work-<t>/last_slot)
 bash build.sh octobre                        # images + tft
-PYTHONIOENCODING=utf-8 python scripts/esphome_ingress.py install <panneau>.yaml   # pip install websockets
+PYTHONIOENCODING=utf-8 python scripts/esphome_ingress.py install <panel>.yaml   # pip install websockets
 python scripts/builder_jobs.py [job_id]
 python3 scripts/hmi_patch.py <in.hmi> <out.hmi> <Nextion2Text_dir> <patch.json>
 ```
 
-Caches de `build.sh` : `~/nspanel/upstream-<UPSTREAM_TAG>` (clone amont, réutilisé), `~/nspanel/work-<thème>`.
+`build.sh` caches: `~/nspanel/upstream-<UPSTREAM_TAG>` (upstream clone, reused), `~/nspanel/work-<theme>`.
 
-## Variables d'environnement
+## Environment variables
 
-| Variable | Défaut | Utilisée par |
+| Variable | Default | Used by |
 | --- | --- | --- |
-| `UPSTREAM_TAG` | `v2026.10.7` | `build.sh` : tag de NSPanel Easy cloné. Doit être la version flashée. |
-| `HA_HOST` | `homeassistant.local:8123` | `esphome_ingress.py`, `builder_jobs.py` (hôte:port, sans schéma ; `http`/`ws` en clair). |
-| `HA_TOKEN` | — | Jeton longue durée HA. À défaut, lu dans la variable utilisateur Windows via `powershell`. |
-| `ESPHOME_SLUG` | `5c53de3b_esphome-dev` | Slug de l'add-on ESPHome dont on ouvre l'ingress. |
-| `DEBUG` | — | `nextion/compile-in-container.sh` : captures d'écran du conteneur. |
+| `UPSTREAM_TAG` | `v2026.10.7` | `build.sh`: NSPanel Easy tag to clone. Must be the flashed version. |
+| `HA_HOST` | `homeassistant.local:8123` | `esphome_ingress.py`, `builder_jobs.py` (host:port, no scheme; plain `http`/`ws`). |
+| `HA_TOKEN` | — | HA long-lived token. If unset, read from the Windows user variable through `powershell`. |
+| `ESPHOME_SLUG` | `5c53de3b_esphome-dev` | Slug of the ESPHome add-on whose ingress is opened. |
+| `DEBUG` | — | `nextion/compile-in-container.sh`: screenshots of the container. |
 
 ## Conventions
 
-- Commentaires et messages en français. TypeScript strict de fait (`!` non nul, `as const`), modules ES, imports
-  avec extension `.ts`, aucune étape de compilation : n'utiliser que de la syntaxe TypeScript effaçable (pas
-  d'`enum`, pas de `namespace`, pas de propriétés de paramètres).
-- Python : scripts courts, bibliothèque standard + `websockets`, pas de dépendances ajoutées sans raison.
-- Dessins : positions aléatoires toujours via `rng(graine)` pour des builds reproductibles.
-- Un thème exporte exactement : `TEXT`, `textRgb565`, `backgroundDark`, `backgroundLight`, `backgroundSplash`,
-  `tileActive`, `tileInactiveDark`, `tileInactiveLight`. Un nouveau thème s'enregistre dans `THEMES` de
-  `render-theme.ts` ET de `render-preview.ts`.
+- Comments and messages in French. TypeScript strict in practice (`!` non-null, `as const`), ES modules, imports
+  with the `.ts` extension, no compilation step: only use erasable TypeScript syntax (no `enum`, no `namespace`, no
+  parameter properties).
+- Python: short scripts, standard library + `websockets`, no dependencies added without a reason.
+- Drawings: random positions always through `rng(seed)` for reproducible builds.
+- A theme exports exactly: `TEXT`, `textRgb565`, `backgroundDark`, `backgroundLight`, `backgroundSplash`,
+  `tileActive`, `tileInactiveDark`, `tileInactiveLight`. A new theme is registered in `THEMES` of
+  `render-theme.ts` AND of `render-preview.ts`.
 
-## Invariants à ne pas casser
+## Invariants not to break
 
-- Images 480×320 ; les 30 px de droite sont masqués sur le NSPanel EU (`VISIBLE_W = 450`) : rien d'utile au-delà.
-  Les maquettes font 450×320.
-- Sortie RGB565 : `renderPng` quantifie R/B sur 5 bits, G sur 6. Fonds sombres et splash tramés ; fond clair et
-  slot 79 avec `{ dither: false }` (le tramage y fait des stries). Tuiles en `keepAlpha` (pixels transparents non
-  tramés, composités plus tard par l'amont).
-- Tous les textes du HMI découpent leur fond dans l'image (« crop image ») : décor franc seulement dans les coins bas
-  (x < 78 et x > 380) et au centre de l'accueil ; ailleurs, faible contraste. Libellés des boutons physiques à
-  x 47-167 et 288-408, y ≈ 288-315.
-- Ambre `#ff9800` = signal « allumé ». Aucun décor ne doit s'en approcher ; seule la tuile active (`#fbbd63`) est ambre.
-- Positions des 8 tuiles : `[17,45] [124,45] [231,45] [338,45] [17,176] [124,176] [231,176] [338,176]`, 100×100,
-  rayon 18 (positions du HMI officiel).
-- Numérotation des slots (mapping amont, version taguée) : fond nuit = 0, fond jour = 48, tuile éteinte nuit = 46,
-  tuile active nuit = 47, tuile éteinte jour = 79 (surchargée par `overrides/79.png`), tuile active jour = 80,
-  météo « partiellement nuageux » nuit = 12, jour = 59. Toute nouvelle version amont peut renuméroter : vérifier.
-- `TEXT` identique entre thèmes : la palette est compilée dans le firmware (substitutions `THEME_*_COLOR_PCO_*`),
-  alors que le TFT se téléverse depuis une URL. La changer impose une recompilation ESPHome de chaque panneau.
-- Texte des tuiles codé en dur dans l'ESPHome amont : blanc sur tuile éteinte, gris foncé sur tuile allumée. Les
-  tuiles éteintes doivent rester assez sombres, de jour comme de nuit.
-- `build.sh` vide `dist/slots` fichier par fichier au lieu de `rm -rf` le dossier (un explorateur Windows ouvert le
-  bloquerait) : garder ce comportement.
+- Images 480×320; the 30 px on the right are hidden on the NSPanel EU (`VISIBLE_W = 450`): nothing useful beyond.
+  The mockups are 450×320.
+- RGB565 output: `renderPng` quantizes R/B to 5 bits, G to 6. Dark backgrounds and splash dithered; light background
+  and slot 79 with `{ dither: false }` (dithering creates streaks there). Tiles in `keepAlpha` (transparent pixels
+  not dithered, composited later by upstream).
+- Every text in the HMI crops its background from the image ("crop image"): bold artwork only in the bottom corners
+  (x < 78 and x > 380) and in the center of the home page; elsewhere, low contrast. Labels of the physical buttons at
+  x 47-167 and 288-408, y ≈ 288-315.
+- Amber `#ff9800` = "on" signal. No artwork may come close to it; only the active tile (`#fbbd63`) is amber.
+- Positions of the 8 tiles: `[17,45] [124,45] [231,45] [338,45] [17,176] [124,176] [231,176] [338,176]`, 100×100,
+  radius 18 (positions from the official HMI).
+- Slot numbering (upstream mapping, tagged version): night background = 0, day background = 48, night off tile = 46,
+  night active tile = 47, day off tile = 79 (overridden by `overrides/79.png`), day active tile = 80,
+  "partly cloudy" weather night = 12, day = 59. Any new upstream version may renumber: check.
+- `TEXT` identical across themes: the palette is compiled into the firmware (substitutions `THEME_*_COLOR_PCO_*`),
+  while the TFT is uploaded from a URL. Changing it requires an ESPHome recompile of every panel.
+- Tile text hard-coded in the upstream ESPHome: white on an off tile, dark gray on an on tile. The off tiles must
+  stay dark enough, by day as by night.
+- `build.sh` empties `dist/slots` file by file instead of `rm -rf` on the folder (an open Windows Explorer window
+  would block it): keep this behavior.
 
-## Pièges connus
+## Known pitfalls
 
-- TFT d'une autre version que le firmware → « Version mismatch ». `UPSTREAM_TAG` = version flashée.
-- Un firmware dont le TFT est plus ancien que celui qu'il exige téléverse seul `nextion_update_url` au redémarrage :
-  publier le TFT avant de flasher.
-- AHK amont sans `WinActivate` : « Could not find element AutomationId=buttonX2 AND Name=Output ».
-- `render-preview.ts` : géométrie relevée sur le HMI v2026.10.6, polices système (Segoe UI) au lieu des polices du
-  HMI. Si l'amont déplace des objets, les maquettes mentent.
-- `lib.ts` n'importe que `octobre-art.ts` : `place()` ne connaît que les motifs d'octobre ; novembre a son propre
+- TFT from another version than the firmware → "Version mismatch". `UPSTREAM_TAG` = flashed version.
+- A firmware whose TFT is older than the one it requires uploads `nextion_update_url` on its own at reboot:
+  publish the TFT before flashing.
+- Upstream AHK without `WinActivate`: "Could not find element AutomationId=buttonX2 AND Name=Output".
+- `render-preview.ts`: geometry measured on HMI v2026.10.6, system fonts (Segoe UI) instead of the HMI fonts. If
+  upstream moves objects, the mockups lie.
+- `lib.ts` only imports `octobre-art.ts`: `place()` only knows the October motifs; November has its own
   `foot()`.
-- `esphome_ingress.py` : protocole du Device Builder 2026.11 pour `install`/`ws` ; `run` vise l'ancienne API.
+- `esphome_ingress.py`: Device Builder 2026.11 protocol for `install`/`ws`; `run` targets the old API.
 
-## Ne jamais commiter
+## Never commit
 
-- Jetons (`HA_TOKEN`), mots de passe, clés.
-- Adresses IP, noms d'hôte ou de domaine d'une maison réelle, slugs ou URL internes autres que les défauts génériques.
-- Prénoms réels, noms de pièces ou d'appareils personnels dans `render-preview.ts` et dans les maquettes publiées ;
-  utiliser des libellés génériques ou les prénoms fictifs ALEX et SAM.
-- Photos de personnes, captures d'un vrai tableau de bord.
-- `themes/` généré, `node_modules/`, TFT et HMI compilés (ils embarquent le HMI amont).
+- Tokens (`HA_TOKEN`), passwords, keys.
+- IP addresses, host or domain names of a real house, slugs or internal URLs other than the generic defaults.
+- Real first names, names of personal rooms or devices in `render-preview.ts` and in the published mockups;
+  use generic labels or the fictional first names ALEX and SAM.
+- Photos of people, screenshots of a real dashboard.
+- Generated `themes/`, `node_modules/`, compiled TFT and HMI (they embed the upstream HMI).
 
-## Vérifier un changement
+## Check a change
 
-1. `node scripts/render-theme.ts octobre` (et `novembre`) : doit finir par « thème … rendu dans … » sans exception.
-2. Dans WSL : `bash build.sh octobre images` → « images : slots 0..N → … ».
-3. `node scripts/render-preview.ts octobre` → « N maquettes dans … » ; ouvrir les PNG jour ET nuit, contrôler la
-   lisibilité des textes et l'absence d'ambre hors tuile active.
-4. Pour un TFT : `bash build.sh octobre tft`, puis tester sur un panneau avant de publier.
+1. `node scripts/render-theme.ts octobre` (and `novembre`): must end with "thème … rendu dans …" without an exception.
+2. In WSL: `bash build.sh octobre images` → "images : slots 0..N → …".
+3. `node scripts/render-preview.ts octobre` → "N maquettes dans …"; open the PNGs for day AND night, check that
+   the texts are readable and that there is no amber outside the active tile.
+4. For a TFT: `bash build.sh octobre tft`, then test on a panel before publishing.
